@@ -1,0 +1,51 @@
+version: "3"
+services:
+    mariadb:
+        build: ./docker/mariadb/
+        restart: always
+        ports:
+            - 3306:3306
+        volumes:
+            - dbvolume:/var/lib/mysql
+        environment:
+            - MYSQL_DATABASE=default
+            - MYSQL_ROOT_PASSWORD=secret
+            - MYSQL_USER=default
+            - MYSQL_PASSWORD=secret
+
+    backend:
+        build:
+            context: .
+            dockerfile: ./docker/go/Dockerfile
+        tty: true
+        volumes:
+            - ./src:/src
+        ports:
+            - "3000:3000"
+        depends_on:
+            - mariadb
+
+    nginx:
+        build:
+            context: .
+            dockerfile: ./docker/nginx/Dockerfile
+        ports:
+            - 80:80
+        depends_on:
+            - backend
+
+    phpmyadmin:
+        build: ./docker/phpmyadmin/
+        environment:
+            - PMA_ARBITRARY=1
+            - PMA_HOST=mariadb
+            - PMA_USER=default
+            - PMA_PASSWORD=secret
+        ports:
+            - 8080:80
+        depends_on:
+            - mariadb
+
+volumes:
+    dbvolume:
+        driver: local
