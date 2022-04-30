@@ -3,23 +3,21 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/go-xorm/xorm"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
     "github.com/43z708/gin_template/model"
     "log"
 )
 
-var DbEngine *xorm.Engine
+var db *gorm.DB
 
 func init()  {
-    driverName := "mysql"
-    DsName := "default:secret@tcp(mariadb:3306)/default"
-    err := errors.New("")
-    DbEngine, err = xorm.NewEngine(driverName,DsName)
+    DsName := "default:secret@tcp(mariadb:3306)/default?charset=utf8mb4&parseTime=True&loc=Local"
+	err := errors.New("")
+    db, err = gorm.Open(mysql.Open(DsName), &gorm.Config{})
     if err != nil && err.Error() != ""{
         log.Fatal(err.Error())
     }
-    DbEngine.ShowSQL(true)
-    DbEngine.SetMaxOpenConns(2)
-    DbEngine.Sync2(new(model.Book))
+	db.AutoMigrate(&model.Book{})
     fmt.Println("init data base ok")
 }
